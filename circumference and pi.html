@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unrolling the Circle: Pi Visualizer</title>
+  
+  <!-- Load Tailwind CSS for styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Load React and ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Load Babel to translate JSX in the browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- The React Application -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    function App() {
+      const [progress, setProgress] = useState(0);
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [diameterCm, setDiameterCm] = useState(3);
+      const [rulerMode, setRulerMode] = useState('d');
+      const animationRef = useRef(null);
+
+      // Constants for the visualization
+      const pixelsPerCm = 40;
+      const d = diameterCm * pixelsPerCm; // diameter in pixels
+      const r = d / 2; // radius in pixels
+      const startX = 80; // starting X position on the canvas
+      const groundY = 280; // Y position of the ground/ruler
+      const pi_d = Math.PI * d; // Exact distance of full circumference
+
+      // Calculated positions based on current progress (0 to 1)
+      const cx = startX + progress * pi_d;
+      const cy = groundY - r;
+      const theta = progress * 2 * Math.PI; // Rotation angle in radians
+
+      // Calculate the contact point that was originally at the bottom (t=0)
+      // This point rotates clockwise as the circle rolls right
+      const startArcX = cx - r * Math.sin(theta);
+      const startArcY = cy + r * Math.cos(theta);
+
+      // Current bottom point of the circle (touching the ground)
+      const endArcX = cx;
+      const endArcY = cy + r;
+
+      // Calculate the point opposite to the starting contact point (for drawing the diameter)
+      const topPointX = cx + r * Math.sin(theta);
+      const topPointY = cy - r * Math.cos(theta);
+
+      // SVG Arc drawing logic for the remaining (rolled up) circumference
+      // Large arc flag is 1 if the remaining angle (2*PI - theta) is greater than PI
+      const largeArcFlag = progress < 0.5 ? 1 : 0;
+      const arcPath = `M ${startArcX} ${startArcY} A ${r} ${r} 0 ${largeArcFlag} 1 ${endArcX} ${endArcY}`;
+
+      // Animation Loop
+      const animate = useCallback(() => {
+        setProgress((prev) => {
+          if (prev >= 1) {
+            setIsPlaying(false);
+            return 1;
+          }
+          return Math.min(prev + 0.003, 1); // Animation speed
+        });
+      }, []);
+
+      useEffect(() => {
+        if (isPlaying) {
+          animationRef.current = requestAnimationFrame(function loop() {
+            animate();
+            if (isPlaying) {
+              animationRef.current = requestAnimationFrame(loop);
+            }
+          });
+        } else if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+        return () => cancelAnimationFrame(animationRef.current);
+      }, [isPlaying, animate]);
+
+      const handlePlayPause = () => {
+        if (progress >= 1 && !isPlaying) {
+          setProgress(0); // Auto-reset if playing from the end
+        }
+        setIsPlaying(!isPlaying);
+      };
+
+      const handleReset = () => {
+        setIsPlaying(false);
+        setProgress(0);
+      };
+
+      // Dynamic values for the display
+      const currentLength = (progress * Math.PI).toFixed(5);
+      const isComplete = progress === 1;
+
+      return (
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center py-10 px-4 font-sans text-slate-800">
+          <div className="max-w-4xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+            
+            {/* Header Section */}
+            <div className="bg-slate-900 text-white p-8 text-center">
+              <h1 className="text-4xl font-bold mb-3 tracking-tight">Unrolling the Circle: Discovering <span className="text-amber-400 font-serif italic">π</span></h1>
+              <p className="text-slate-300 text-lg max-w-2xl mx-auto">
+                Deform the circle's circumference into a straight line. 
+                Notice how the total length of the circumference (<span className="text-blue-400 font-semibold">C</span>) compares to its diameter (<span className="text-emerald-400 font-semibold">d</span>).
+              </p>
+            </div>
+
+            {/* Dashboard / Metrics */}
+            <div className="flex flex-col md:flex-row justify-center items-center gap-6 p-6 bg-slate-100 border-b border-slate-200">
+              <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-slate-200 text-center w-full md:w-1/3">
+                <p className="text-sm text-slate-500 uppercase tracking-wider font-semibold mb-1">Diameter (d)</p>
+                <p className="text-3xl font-mono text-emerald-600">{diameterCm.toFixed(1)} cm</p>
+                <p className="text-xs text-slate-400 mt-1">(Radius r = {diameterCm / 2} cm)</p>
+              </div>
+              
+              <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-blue-200 text-center w-full md:w-1/3 relative overflow-hidden">
+                <div className={`absolute inset-0 bg-blue-50 transition-opacity duration-1000 ${isComplete ? 'opacity-100' : 'opacity-0'}`}></div>
+                <div className="relative z-10">
+                  <p className="text-sm text-blue-600 uppercase tracking-wider font-semibold mb-1">Unrolled Length (C)</p>
+                  <p className="text-3xl font-mono text-blue-600 font-bold">
+                    {rulerMode === 'd' ? (
+                      <React.Fragment>{currentLength}{isComplete ? <span className="animate-pulse">...</span> : ''} <span className="text-xl">× d</span></React.Fragment>
+                    ) : (
+                      <React.Fragment>{(progress * Math.PI * diameterCm).toFixed(2)} <span className="text-xl">cm</span></React.Fragment>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Canvas Section */}
+            <div className="p-6 relative overflow-hidden">
+              <svg viewBox="0 0 800 350" className="w-full h-auto drop-shadow-md rounded-lg bg-white">
+                {/* Ground / Axis */}
+                <line x1="40" y1={groundY} x2="760" y2={groundY} stroke="#94a3b8" strokeWidth="3" />
+                
+                {/* Ruler Markings */}
+                {rulerMode === 'd' ? (
+                  // Markings for 0d, 1d, 2d, 3d, 4d, 5d
+                  [0, 1, 2, 3, 4, 5].filter(i => (startX + i * d) < 780).map(i => {
+                    const tickX = startX + i * d;
+                    return (
+                      <g key={`d-${i}`}>
+                        <line x1={tickX} y1={groundY} x2={tickX} y2={groundY + 12} stroke="#64748b" strokeWidth="2" />
+                        <text x={tickX} y={groundY + 32} textAnchor="middle" fill="#475569" className="font-mono text-sm font-bold">{i}d</text>
+                        {/* Faint vertical grid lines */}
+                        <line x1={tickX} y1={groundY - 10} x2={tickX} y2="40" stroke="#f1f5f9" strokeWidth="2" strokeDasharray="6,6" />
+                      </g>
+                    );
+                  })
+                ) : (
+                  // Markings in cm
+                  [...Array(18).keys()].map(i => {
+                    const tickX = startX + i * pixelsPerCm;
+                    return (
+                      <g key={`cm-${i}`}>
+                        <line x1={tickX} y1={groundY} x2={tickX} y2={groundY + 12} stroke="#64748b" strokeWidth="2" />
+                        <text x={tickX} y={groundY + 32} textAnchor="middle" fill="#475569" className="font-mono text-sm font-bold">{i}</text>
+                        {/* Faint vertical grid lines for major marks */}
+                        <line x1={tickX} y1={groundY - 10} x2={tickX} y2="40" stroke="#f1f5f9" strokeWidth="2" strokeDasharray="6,6" />
+                      </g>
+                    );
+                  })
+                )}
+
+                {/* Special Pi Marker */}
+                <g className={`transition-opacity duration-700 ${progress > 0.95 ? 'opacity-100' : 'opacity-30'}`}>
+                  <line x1={startX + pi_d} y1={groundY - 140} x2={startX + pi_d} y2={groundY + 15} stroke="#f59e0b" strokeWidth="3" strokeDasharray="4,4" />
+                  <rect x={startX + pi_d - 35} y={groundY + 22} width="70" height="24" rx="4" fill="#f59e0b" />
+                  <text x={startX + pi_d} y={groundY + 39} textAnchor="middle" fill="white" className="font-serif font-bold text-sm">
+                    {rulerMode === 'd' ? 'π × d' : `${(Math.PI * diameterCm).toFixed(2)} cm`}
+                  </text>
+                  <text x={startX + pi_d} y={groundY - 150} textAnchor="middle" fill="#d97706" className="font-mono font-bold text-sm bg-white px-1">
+                    {rulerMode === 'd' ? '~3.14159...' : `π × ${diameterCm}cm`}
+                  </text>
+                </g>
+
+                {/* Unrolled Circumference (Straight line on the ground) */}
+                <line x1={startX} y1={groundY - 2} x2={cx} y2={groundY - 2} stroke="#3b82f6" strokeWidth="5" strokeLinecap="round" />
+
+                {/* Ghost outline of starting position */}
+                <circle cx={startX} cy={groundY - r} r={r} fill="none" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="4,4" />
+
+                {/* The Rolling Circle */}
+                <g>
+                  {/* Inner Circle Fill */}
+                  <circle cx={cx} cy={cy} r={Math.max(0, r - 2)} fill="#f8fafc" />
+                  
+                  {/* Faint border for the whole circle so it doesn't disappear */}
+                  <circle cx={cx} cy={cy} r={r} fill="none" stroke="#cbd5e1" strokeWidth="2" />
+                  
+                  {/* Diameter Line (Rotates with circle) */}
+                  <line x1={topPointX} y1={topPointY} x2={startArcX} y2={startArcY} stroke="#10b981" strokeWidth="3" opacity="0.8" />
+                  
+                  {/* Remaining Circumference (Arc) */}
+                  {progress === 0 ? (
+                    <circle cx={cx} cy={cy} r={r} fill="none" stroke="#3b82f6" strokeWidth="5" />
+                  ) : progress < 1 ? (
+                    <path d={arcPath} fill="none" stroke="#3b82f6" strokeWidth="5" strokeLinecap="round" />
+                  ) : null}
+
+                  {/* Center Dot */}
+                  <circle cx={cx} cy={cy} r="5" fill="#1e293b" />
+                  
+                  {/* "d" label rotating along the diameter */}
+                  {progress < 0.9 && (
+                     <text x={cx + 10} y={cy - 10} fill="#047857" className="font-serif font-bold italic text-lg" style={{transform: `rotate(${progress * 360}deg)`, transformOrigin: `${cx}px ${cy}px`}}>
+                       d
+                     </text>
+                  )}
+                </g>
+              </svg>
+            </div>
+
+            {/* Controls Section */}
+            <div className="px-8 py-6 bg-slate-50 border-t border-slate-200">
+              <div className="flex flex-col items-center gap-8">
+                
+                {/* Toggles and Diameter Slider */}
+                <div className="flex flex-col md:flex-row gap-8 w-full max-w-3xl justify-between items-center">
+                  
+                  {/* Scale Toggle */}
+                  <div className="flex flex-col gap-2 w-full md:w-1/2">
+                    <label className="text-sm font-semibold text-slate-600">Ruler Scale Unit</label>
+                    <div className="flex bg-slate-200 p-1 rounded-lg">
+                      <button 
+                        onClick={() => setRulerMode('d')}
+                        className={`flex-1 py-1.5 text-sm font-bold rounded-md transition-colors ${rulerMode === 'd' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                      >
+                        In terms of 'd'
+                      </button>
+                      <button 
+                        onClick={() => setRulerMode('cm')}
+                        className={`flex-1 py-1.5 text-sm font-bold rounded-md transition-colors ${rulerMode === 'cm' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                      >
+                        In Centimeters (cm)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Diameter Slider */}
+                  <div className="flex flex-col gap-2 w-full md:w-1/2">
+                    <label className="text-sm font-semibold text-slate-600 flex justify-between">
+                      <span>Circle Diameter (d)</span>
+                      <span className="text-emerald-600">{diameterCm.toFixed(1)} cm</span>
+                    </label>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="4.5" 
+                      step="0.5" 
+                      value={diameterCm} 
+                      onChange={(e) => setDiameterCm(parseFloat(e.target.value))}
+                      className="w-full h-3 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                  </div>
+
+                </div>
+
+                {/* Unroll Slider */}
+                <div className="w-full max-w-3xl flex items-center gap-4">
+                  <span className="text-slate-600 font-bold w-20 text-right uppercase text-sm tracking-wider">Unroll</span>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="1" 
+                    step="0.001" 
+                    value={progress} 
+                    onChange={(e) => {
+                      setIsPlaying(false);
+                      setProgress(parseFloat(e.target.value));
+                    }}
+                    className="w-full h-3 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <span className="text-slate-500 font-bold w-12">{Math.round(progress * 100)}%</span>
+                </div>
+
+                {/* Play/Pause Buttons */}
+                <div className="flex gap-4">
+                  <button 
+                    onClick={handlePlayPause}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-semibold transition-colors shadow-md active:scale-95"
+                  >
+                    {isPlaying ? (
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                    )}
+                    {isPlaying ? "Pause" : (progress >= 1 ? "Replay" : "Play Animation")}
+                  </button>
+                  
+                  <button 
+                    onClick={handleReset}
+                    className="flex items-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-700 px-6 py-3 rounded-full font-semibold transition-colors shadow-sm active:scale-95"
+                  >
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Educational Conclusion */}
+            <div className={`transition-all duration-1000 overflow-hidden ${isComplete ? 'max-h-64 opacity-100 p-8 bg-amber-50 border-t border-amber-200' : 'max-h-0 opacity-0 p-0'}`}>
+              <h3 className="text-2xl font-bold text-amber-900 mb-2">The Magic of Pi</h3>
+              <p className="text-amber-800 text-lg leading-relaxed">
+                As you can see, when the circle is completely unrolled, its circumference doesn't stop exactly at 3 diameters. It goes a little bit further! 
+                No matter how big or small the circle is, this ratio is always exactly <strong>3.14159265...</strong> times the diameter. We call this irrational number <strong>π (Pi)</strong>.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    // Initialize and Render the React application
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
