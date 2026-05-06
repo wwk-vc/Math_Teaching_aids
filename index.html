@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁標題</title>
+    <style>
+        /* 1. GLOBAL STYLES: Sets the font and background */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern font */
+            margin: 0;
+            padding: 0;
+            /* A professional gradient background (Blue to Purple) */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; /* Ensures bg covers whole screen */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 2. THE CONTAINER: The white box in the middle */
+        .container {
+            background-color: #ffffff;
+            width: 90%;
+            max-width: 600px; /* Keeps it from getting too wide on big screens */
+            padding: 40px;
+            border-radius: 15px; /* Rounded corners */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); /* Drop shadow for depth */
+            text-align: center;
+        }
+
+        /* 3. TYPOGRAPHY */
+        h1 {
+            color: #333;
+            margin-top: 0;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        /* 4. BUTTON LINKS: Making the links look professional */
+        .link-card {
+            display: block; /* Makes the whole area clickable */
+            background-color: #f8f9fa; /* Light grey background */
+            color: #333; /* Dark text */
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            text-decoration: none; /* Removes the underline */
+            font-weight: 600;
+            transition: all 0.3s ease; /* Smooth animation */
+            border-left: 5px solid #667eea; /* A colorful accent strip on the left */
+            text-align: left;
+        }
+
+        /* 5. HOVER EFFECT: What happens when mouse goes over link */
+        .link-card:hover {
+            background-color: #667eea; /* Turns blue/purple */
+            color: white; /* Text turns white */
+            transform: translateY(-3px); /* Moves up slightly */
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Optional: Style for a banner image */
+        .banner-img {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>內容標題</h1>
+        <p class="subtitle">created by 作者</p>
+        
+        <hr style="border: 0; height: 1px; background: #eee; margin-bottom: 25px;">
+
+        <a href="webpage1.html" class="link-card">
+            網頁一
+        </a>
+        
+        <a href="webpage2.html" class="link-card">
+            網頁二
+        </a>
+
+	<a href="webpage3.html" class="link-card">
+            網頁三
+        </a>
+           </div>
+
+</body>
+</html>
