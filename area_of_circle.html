@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Area Interactive Lab</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --secondary: #6c5ce7;
+            --accent: #f39c12;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f0f4f8;
+            --card: #ffffff;
+            --text: #2d3436;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .wrapper {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: var(--secondary);
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        /* Visualizer Styles */
+        .viz-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #canvas-wrapper {
+            background: #f9f9f9;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            width: 100%;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        input[type=range] {
+            width: 100%;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+
+        .formula-box {
+            font-size: 1.4rem;
+            background: #eef2f7;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace;
+            border-left: 6px solid var(--primary);
+        }
+
+        .formula-box span {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Explanation Styles */
+        .explanation-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .explanation-content { grid-template-columns: 1fr; }
+        }
+
+        .wedge-diagram {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .sectors-controls {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .sectors-controls input {
+            flex: 1;
+            margin: 0;
+        }
+        
+        #sectors-canvas {
+            width: 100%;
+            height: auto;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Practice Styles */
+        .practice-flex {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 400px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type=number] {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            flex: 1;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        button:hover { background: var(--secondary); }
+        button:active { transform: scale(0.98); }
+
+        #feedback {
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .correct { background: #d4edda; color: var(--success); display: block !important; }
+        .incorrect { background: #f8d7da; color: var(--error); display: block !important; }
+
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <header>
+        <h1>Circle Area Lab</h1>
+        <p>Interactive discovery of $A = \pi r^2$</p>
+    </header>
+
+    <!-- Interactive Visualizer -->
+    <section class="card">
+        <h2>1. Visualizer</h2>
+        <div class="viz-container">
+            <div id="canvas-wrapper">
+                <svg id="circle-svg" width="300" height="300" viewBox="0 0 300 300">
+                    <!-- Circle Area Fill -->
+                    <circle id="v-circle" cx="150" cy="150" r="50" fill="rgba(74, 144, 226, 0.2)" stroke="var(--primary)" stroke-width="2" />
+                    <!-- Radius Line -->
+                    <line id="v-radius-line" x1="150" y1="150" x2="200" y2="150" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" />
+                    <!-- Center Point -->
+                    <circle cx="150" cy="150" r="4" fill="var(--text)" />
+                    <!-- Radius Text -->
+                    <text id="v-radius-text" x="160" y="140" font-weight="bold" fill="var(--accent)">r = 5</text>
+                </svg>
+            </div>
+
+            <div class="controls">
+                <label for="radius-slider">Drag to change Radius (<strong>r</strong>):</label>
+                <input type="range" id="radius-slider" min="1" max="10" step="0.5" value="5">
+                
+                <div class="formula-box" id="formula-display">
+                    A = &pi; &times; r&sup2; <br>
+                    A &approx; 3.14 &times; 5&sup2; = <span>78.50</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Explanation Section -->
+    <section class="card">
+        <h2>2. How it Works (The Slicing Method)</h2>
+        <div>
+            <p>Imagine slicing a circle into many thin wedges, like a pizza. If we arrange these wedges side-by-side, they start to form a new shape. <strong>Try increasing the number of slices below!</strong></p>
+            
+            <div class="sectors-controls">
+                <label for="sector-slider">Number of slices (<strong>n</strong>): <strong id="sector-count" style="color: var(--primary);">8</strong></label>
+                <input type="range" id="sector-slider" min="4" max="100" step="2" value="8">
+            </div>
+
+            <canvas id="sectors-canvas" width="800" height="280"></canvas>
+
+            <ul>
+                <li>As you cut more slices, the curvy edges become flatter, and the slanted sides become straighter.</li>
+                <li>Eventually, it perfectly forms a <strong>rectangle</strong>!</li>
+                <li>The <strong style="color: var(--error);">height</strong> of this rectangle is exactly the radius (<strong style="color: var(--error);">r</strong>).</li>
+                <li>The <strong style="color: var(--success);">width</strong> of the base is exactly half the circle's circumference (<strong style="color: var(--success);">&pi;r</strong>).</li>
+                <li>Since Area of a rectangle = base &times; height, the area is <strong>&pi;r &times; r = &pi;r&sup2;</strong>.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Practice Tool -->
+    <section class="card">
+        <h2>3. Practice Challenge</h2>
+        <div class="practice-flex">
+            <p id="question-text">Loading challenge...</p>
+            <div class="input-group">
+                <input type="number" id="user-input" placeholder="Enter Area" step="0.01">
+                <button onclick="checkAnswer()">Submit</button>
+            </div>
+            <div id="feedback"></div>
+            <button style="background: #95a5a6;" onclick="newQuestion()">Get New Radius</button>
+        </div>
+    </section>
+</div>
+
+<script>
+    // --- Visualizer Logic ---
+    const slider = document.getElementById('radius-slider');
+    const vCircle = document.getElementById('v-circle');
+    const vRadiusLine = document.getElementById('v-radius-line');
+    const vRadiusText = document.getElementById('v-radius-text');
+    const formulaDisplay = document.getElementById('formula-display');
+
+    function updateVisualizer() {
+        const r = parseFloat(slider.value);
+        const scale = 14; // Scale units to pixels
+        const visualR = r * scale;
+
+        // Update SVG Elements
+        vCircle.setAttribute('r', visualR);
+        vRadiusLine.setAttribute('x2', 150 + visualR);
+        vRadiusText.setAttribute('x', 150 + (visualR / 2));
+        vRadiusText.textContent = `r = ${r}`;
+
+        // Calculate Area
+        const area = (Math.PI * Math.pow(r, 2)).toFixed(2);
+        
+        // Update Math Text
+        formulaDisplay.innerHTML = `
+            A = &pi; &times; r&sup2; <br>
+            A &approx; 3.14 &times; ${r}&sup2; = <span>${area}</span>
+        `;
+    }
+
+    slider.addEventListener('input', updateVisualizer);
+
+    // --- Sectors Animation Logic (How it Works) ---
+    const sectorSlider = document.getElementById('sector-slider');
+    const sectorCountDisplay = document.getElementById('sector-count');
+    const sectorsCanvas = document.getElementById('sectors-canvas');
+    const sCtx = sectorsCanvas.getContext('2d');
+
+    function drawSectors() {
+        const n = parseInt(sectorSlider.value);
+        sectorCountDisplay.textContent = n;
+        
+        const width = sectorsCanvas.width;
+        const height = sectorsCanvas.height;
+        sCtx.clearRect(0, 0, width, height);
+
+        const R = 80; // Radius of the circle
+        const theta = 2 * Math.PI / n;
+
+        const color1 = 'rgba(74, 144, 226, 0.8)'; // Primary Blue
+        const color2 = 'rgba(243, 156, 18, 0.8)'; // Accent Orange
+
+        // 1. Draw Original Circle
+        const cx1 = width * 0.22;
+        const cy1 = height / 2 + 10;
+
+        sCtx.lineWidth = n > 50 ? 0.5 : 1;
+        sCtx.strokeStyle = '#fff';
+
+        for (let i = 0; i < n; i++) {
+            sCtx.beginPath();
+            sCtx.moveTo(cx1, cy1);
+            sCtx.arc(cx1, cy1, R, i * theta, (i + 1) * theta);
+            sCtx.closePath();
+            sCtx.fillStyle = (i % 2 === 0) ? color1 : color2;
+            sCtx.fill();
+            sCtx.stroke();
+        }
+
+        // --- Highlight Original Boundaries ---
+        // 1. Circumference (Green)
+        sCtx.beginPath();
+        sCtx.arc(cx1, cy1, R, 0, 2 * Math.PI);
+        sCtx.strokeStyle = '#27ae60'; 
+        sCtx.lineWidth = 4;
+        sCtx.stroke();
+
+        // 2. Radius (Red)
+        sCtx.beginPath();
+        sCtx.moveTo(cx1, cy1);
+        sCtx.lineTo(cx1 + R, cy1);
+        sCtx.strokeStyle = '#e74c3c'; 
+        sCtx.lineWidth = 4;
+        sCtx.stroke();
+
+        // Labels for Original Circle
+        sCtx.fillStyle = '#27ae60';
+        sCtx.font = '14px bold sans-serif';
+        sCtx.textAlign = 'center';
+        sCtx.fillText('Circumference (2πr)', cx1, cy1 - R - 15);
+        
+        sCtx.fillStyle = '#e74c3c';
+        sCtx.fillText('Radius (r)', cx1 + R / 2, cy1 - 10);
+
+        // 2. Draw Rearranged Shape
+        const dx = R * Math.sin(theta / 2);
+        const h = R * Math.cos(theta / 2);
+        
+        const totalWidth = n * dx;
+        const startX = (width * 0.72) - (totalWidth / 2);
+        const startY = cy1 - (R / 2);
+
+        sCtx.save();
+        sCtx.translate(startX, startY);
+
+        for (let i = 0; i < n; i++) {
+            sCtx.beginPath();
+            if (i % 2 === 0) {
+                // Pointing down: tip at top (y=0)
+                const tipX = i * dx;
+                sCtx.moveTo(tipX, 0);
+                sCtx.arc(tipX, 0, R, Math.PI/2 - theta/2, Math.PI/2 + theta/2);
+            } else {
+                // Pointing up: tip at bottom (y=h)
+                const tipX = i * dx;
+                sCtx.moveTo(tipX, h);
+                sCtx.arc(tipX, h, R, -Math.PI/2 - theta/2, -Math.PI/2 + theta/2);
+            }
+            sCtx.closePath();
+            sCtx.fillStyle = (i % 2 === 0) ? color1 : color2;
+            sCtx.fill();
+            sCtx.stroke();
+        }
+        
+        // --- Highlight Rearranged Boundaries ---
+        // 1. Bases/Arcs (Green)
+        sCtx.beginPath();
+        for (let i = 0; i < n; i++) {
+            if (i % 2 === 0) {
+                const tipX = i * dx;
+                sCtx.arc(tipX, 0, R, Math.PI/2 - theta/2, Math.PI/2 + theta/2);
+            } else {
+                const tipX = i * dx;
+                sCtx.arc(tipX, h, R, -Math.PI/2 - theta/2, -Math.PI/2 + theta/2);
+            }
+        }
+        sCtx.strokeStyle = '#27ae60';
+        sCtx.lineWidth = 4;
+        sCtx.stroke();
+
+        // 2. Height/Radius (Red) - using left edge of the first sector
+        sCtx.beginPath();
+        sCtx.moveTo(0, 0);
+        sCtx.lineTo(R * Math.cos(Math.PI/2 + theta/2), R * Math.sin(Math.PI/2 + theta/2));
+        sCtx.strokeStyle = '#e74c3c';
+        sCtx.lineWidth = 4;
+        sCtx.stroke();
+
+        sCtx.restore();
+
+        // Draw dimensions for the rectangle
+        sCtx.font = '16px bold sans-serif';
+        
+        // Base label
+        sCtx.fillStyle = '#27ae60';
+        sCtx.textAlign = 'center';
+        sCtx.fillText('Base ≈ πr', startX + totalWidth / 2, startY + R + 30);
+        
+        // Height label
+        sCtx.fillStyle = '#e74c3c';
+        sCtx.textAlign = 'left';
+        sCtx.fillText('Height ≈ r', startX + totalWidth + 10, startY + R / 2 + 5);
+
+        // Titles
+        sCtx.fillStyle = '#2d3436';
+        sCtx.textAlign = 'center';
+        
+        // Base label
+        sCtx.fillText('Base ≈ πr', startX + totalWidth / 2, startY + R + 30);
+        
+        // Height label
+        sCtx.textAlign = 'left';
+        sCtx.fillText('Height ≈ r', startX + totalWidth + 10, startY + R / 2 + 5);
+
+        // Titles
+        sCtx.textAlign = 'center';
+        sCtx.font = '18px sans-serif';
+        sCtx.fillText('Original Circle', cx1, 35);
+        sCtx.fillText('Rearranged Shape', width * 0.72, 35);
+    }
+
+    sectorSlider.addEventListener('input', drawSectors);
+    drawSectors(); // Initial draw
+
+    // --- Practice Tool Logic ---
+    let currentRadius = 0;
+    let expectedArea = 0;
+
+    function newQuestion() {
+        currentRadius = Math.floor(Math.random() * 10) + 1;
+        // Using 3.14 for student-friendly calculation
+        expectedArea = (3.14 * Math.pow(currentRadius, 2)).toFixed(2);
+        
+        document.getElementById('question-text').innerHTML = 
+            `A circle has a radius of <strong>${currentRadius}</strong>. <br> Calculate its area (use &pi; = 3.14).`;
+        
+        const feedback = document.getElementById('feedback');
+        feedback.className = '';
+        feedback.textContent = '';
+        document.getElementById('user-input').value = '';
+    }
+
+    function checkAnswer() {
+        const userVal = parseFloat(document.getElementById('user-input').value);
+        const feedback = document.getElementById('feedback');
+
+        if (isNaN(userVal)) {
+            feedback.textContent = "Please enter a valid number.";
+            feedback.className = 'incorrect';
+            return;
+        }
+
+        // Allow for tiny rounding differences
+        if (Math.abs(userVal - expectedArea) < 0.1) {
+            feedback.textContent = "Correct! Great job.";
+            feedback.className = 'correct';
+        } else {
+            feedback.textContent = `Incorrect. Try again! Hint: 3.14 × ${currentRadius} × ${currentRadius}`;
+            feedback.className = 'incorrect';
+        }
+    }
+
+    // Initialize
+    updateVisualizer();
+    newQuestion();
+</script>
+
+</body>
+</html>
