@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover the Area of a Circle</title>
+    <style>
+        /* CSS: Clean, Modern UI */
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f39c12;
+            --bg-color: #f0f4f8;
+            --text-color: #2c3e50;
+            --box-bg: #ffffff;
+            --correct-color: #27ae60;
+            --error-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background-color: var(--box-bg);
+            max-width: 800px;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-bottom: 30px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--text-color);
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        p {
+            font-size: 1.1em;
+        }
+
+        /* Visualizer Section */
+        .visualizer-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .svg-container {
+            width: 250px;
+            height: 250px;
+            background-color: #fafbfc;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            /* Grid background for scale context */
+            background-image: radial-gradient(#d5d8dc 1px, transparent 1px);
+            background-size: 25px 25px;
+        }
+
+        .slider-section {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        .math-display {
+            background-color: #eaf2fa;
+            color: var(--primary-color);
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1.4em;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* "Why it Works" Section */
+        .explanation-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            background: #fff9f0;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .diagram-text {
+            text-align: center;
+            font-weight: bold;
+            color: #d35400;
+        }
+
+        /* Practice Section */
+        .practice-area {
+            text-align: center;
+            background-color: #f9fdfa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0f2e9;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        input[type="number"] {
+            padding: 12px;
+            font-size: 1.1em;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            width: 120px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+
+        #feedback-msg {
+    
