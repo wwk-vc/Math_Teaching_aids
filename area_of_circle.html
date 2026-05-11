@@ -63,51 +63,50 @@
             padding-bottom: 10px;
         }
 
-        /* Visualizer Styles */
-        .viz-container {
+        /* Controls */
+        .controls-bar {
+            margin: 15px 0;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 20px;
-        }
-
-        #canvas-wrapper {
+            gap: 15px;
             background: #f9f9f9;
-            border: 2px dashed #ddd;
-            border-radius: 10px;
-            width: 100%;
-            height: 320px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
         }
-
-        .controls {
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-        }
-
-        input[type=range] {
-            width: 100%;
-            margin: 20px 0;
+        
+        .controls-bar select, .controls-bar input[type=range] {
+            flex: 1;
+            margin: 0;
             cursor: pointer;
+            padding: 5px;
         }
 
-        .formula-box {
-            font-size: 1.4rem;
-            background: #eef2f7;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            font-family: 'Courier New', Courier, monospace;
-            border-left: 6px solid var(--primary);
-        }
-
-        .formula-box span {
-            color: var(--primary);
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
             font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        button:hover { background: var(--secondary); }
+        button:active { transform: scale(0.98); }
+
+        /* Hands-on Canvas */
+        #drag-canvas {
+            width: 100%;
+            height: auto;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            touch-action: none; /* Prevents scrolling while dragging on mobile */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
         }
 
         /* Explanation Styles */
@@ -120,28 +119,6 @@
 
         @media (max-width: 768px) {
             .explanation-content { grid-template-columns: 1fr; }
-        }
-
-        .wedge-diagram {
-            background: #fff;
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .sectors-controls {
-            margin: 15px 0;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-
-        .sectors-controls input {
-            flex: 1;
-            margin: 0;
         }
         
         #sectors-canvas {
@@ -175,20 +152,6 @@
             font-size: 1rem;
         }
 
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            background: var(--primary);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s, background 0.2s;
-        }
-
-        button:hover { background: var(--secondary); }
-        button:active { transform: scale(0.98); }
-
         #feedback {
             font-weight: bold;
             padding: 10px;
@@ -208,42 +171,50 @@
         <h1>Circle Area Lab</h1>
     </header>
 
-    <!-- Interactive Visualizer -->
+    <!-- NEW SECTION 1: Hands-on Sandbox -->
     <section class="card">
-        <h2>1. Visualizer</h2>
-        <div class="viz-container">
-            <div id="canvas-wrapper">
-                <svg id="circle-svg" width="300" height="300" viewBox="0 0 300 300">
-                    <!-- Circle Area Fill -->
-                    <circle id="v-circle" cx="150" cy="150" r="50" fill="rgba(74, 144, 226, 0.2)" stroke="var(--primary)" stroke-width="2" />
-                    <!-- Radius Line -->
-                    <line id="v-radius-line" x1="150" y1="150" x2="200" y2="150" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" />
-                    <!-- Center Point -->
-                    <circle cx="150" cy="150" r="4" fill="var(--text)" />
-                    <!-- Radius Text -->
-                    <text id="v-radius-text" x="160" y="140" font-weight="bold" fill="var(--accent)">r = 5</text>
-                </svg>
-            </div>
-
-            <div class="controls">
-                <label for="radius-slider">Drag to change Radius (<strong>r</strong>):</label>
-                <input type="range" id="radius-slider" min="1" max="10" step="0.5" value="5">
-                
-                <div class="formula-box" id="formula-display">
-                    A = &pi; &times; r&sup2; <br>
-                    A &approx; 3.14 &times; 5&sup2; = <span>78.50</span>
-                </div>
-            </div>
+        <h2>1. Hands-on: Build the Rectangle</h2>
+        <p>Before we use math, try building the formula yourself! Cut the circle into wedges and rearrange them.</p>
+        
+        <div class="controls-bar">
+            <label for="cut-select">Number of slices (<strong>n</strong>):</label>
+            <select id="cut-select">
+                <option value="6">6 Slices</option>
+                <option value="8" selected>8 Slices</option>
+                <option value="10">10 Slices</option>
+                <option value="12">12 Slices</option>
+            </select>
+            <button id="btn-cut" style="flex: 0 1 auto;">Cut & Reset</button>
         </div>
+
+        <div style="text-align: center; color: #666; font-size: 0.95rem; margin-bottom: 10px;">
+            <em>💡 <strong>Drag</strong> the colored shapes to move them. Drag the <strong>small white knobs</strong> to freely rotate them.</em>
+        </div>
+
+        <svg id="drag-canvas" viewBox="0 0 800 350">
+            <!-- Grid pattern background -->
+            <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+            
+            <!-- Helper text on the canvas -->
+            <text x="500" y="175" fill="#ddd" font-size="28" text-anchor="middle" font-weight="bold">Build Here &rarr;</text>
+            
+            <!-- Draggable wedges will be generated here -->
+            <g id="wedges-container"></g>
+        </svg>
     </section>
 
-    <!-- Explanation Section -->
+    <!-- Explanation Section (Now Section 2) -->
     <section class="card">
         <h2>2. How it Works (The Slicing Method)</h2>
         <div>
-            <p>Imagine slicing a circle into many thin wedges, like a pizza. If we arrange these wedges side-by-side, they start to form a new shape. <strong>Try increasing the number of slices below!</strong></p>
+            <p>If we slice the circle into <em>many</em> thin wedges and arrange them like you did above, they start to form a perfect shape. <strong>Try increasing the number of slices below to see what happens!</strong></p>
             
-            <div class="sectors-controls">
+            <div class="controls-bar">
                 <label for="sector-slider">Number of slices (<strong>n</strong>): <strong id="sector-count" style="color: var(--primary);">8</strong></label>
                 <input type="range" id="sector-slider" min="4" max="100" step="2" value="8">
             </div>
@@ -260,7 +231,7 @@
         </div>
     </section>
 
-    <!-- Practice Tool -->
+    <!-- Practice Tool (Now Section 3) -->
     <section class="card">
         <h2>3. Practice Challenge</h2>
         <div class="practice-flex">
@@ -276,37 +247,200 @@
 </div>
 
 <script>
-    // --- Visualizer Logic ---
-    const slider = document.getElementById('radius-slider');
-    const vCircle = document.getElementById('v-circle');
-    const vRadiusLine = document.getElementById('v-radius-line');
-    const vRadiusText = document.getElementById('v-radius-text');
-    const formulaDisplay = document.getElementById('formula-display');
+    // ==========================================
+    // --- PART 1: Drag & Drop Interactive Canvas
+    // ==========================================
+    const dragCanvas = document.getElementById('drag-canvas');
+    const wedgesContainer = document.getElementById('wedges-container');
+    const cutSelect = document.getElementById('cut-select');
+    const btnCut = document.getElementById('btn-cut');
 
-    function updateVisualizer() {
-        const r = parseFloat(slider.value);
-        const scale = 14; // Scale units to pixels
-        const visualR = r * scale;
+    let activeWedge = null;
+    let startX, startY;
+    let initialTx, initialTy;
+    let rotationOffset = 0;
+    let isRotating = false;
+    let currentActionElement = null;
 
-        // Update SVG Elements
-        vCircle.setAttribute('r', visualR);
-        vRadiusLine.setAttribute('x2', 150 + visualR);
-        vRadiusText.setAttribute('x', 150 + (visualR / 2));
-        vRadiusText.textContent = `r = ${r}`;
-
-        // Calculate Area
-        const area = (Math.PI * Math.pow(r, 2)).toFixed(2);
-        
-        // Update Math Text
-        formulaDisplay.innerHTML = `
-            A = &pi; &times; r&sup2; <br>
-            A &approx; 3.14 &times; ${r}&sup2; = <span>${area}</span>
-        `;
+    // Helper: Convert screen coordinates to SVG viewBox coordinates
+    function getSVGPoint(x, y) {
+        const pt = dragCanvas.createSVGPoint();
+        pt.x = x;
+        pt.y = y;
+        return pt.matrixTransform(dragCanvas.getScreenCTM().inverse());
     }
 
-    slider.addEventListener('input', updateVisualizer);
+    function createDraggableWedges() {
+        wedgesContainer.innerHTML = ''; // Clear existing
+        const n = parseInt(cutSelect.value);
+        const R = 120; // Radius
+        const cx = 180, cy = 175; // Starting Center
+        const theta = (2 * Math.PI) / n;
+        
+        for (let i = 0; i < n; i++) {
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            
+            // Draw a wedge starting at angle 0
+            const x1 = R * Math.cos(0);
+            const y1 = R * Math.sin(0);
+            const x2 = R * Math.cos(theta);
+            const y2 = R * Math.sin(theta);
+            
+            path.setAttribute('d', `M 0 0 L ${x1} ${y1} A ${R} ${R} 0 0 1 ${x2} ${y2} Z`);
+            path.setAttribute('fill', i % 2 === 0 ? 'rgba(74, 144, 226, 0.9)' : 'rgba(243, 156, 18, 0.9)');
+            path.setAttribute('stroke', '#fff');
+            path.setAttribute('stroke-width', '2');
+            path.style.cursor = 'grab';
+            
+            // Rotation Handle
+            const handleX = (R + 15) * Math.cos(theta / 2);
+            const handleY = (R + 15) * Math.sin(theta / 2);
+            
+            const handleGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            handleGroup.style.cursor = 'grab';
+            
+            const handleBg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            handleBg.setAttribute('cx', handleX);
+            handleBg.setAttribute('cy', handleY);
+            handleBg.setAttribute('r', '12');
+            handleBg.setAttribute('fill', '#fff');
+            handleBg.setAttribute('stroke', '#2c3e50');
+            handleBg.setAttribute('stroke-width', '2');
+            
+            const handleDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            handleDot.setAttribute('cx', handleX);
+            handleDot.setAttribute('cy', handleY);
+            handleDot.setAttribute('r', '4');
+            handleDot.setAttribute('fill', '#2c3e50');
+            
+            handleGroup.appendChild(handleBg);
+            handleGroup.appendChild(handleDot);
 
-    // --- Sectors Animation Logic (How it Works) ---
+            g.appendChild(path);
+            g.appendChild(handleGroup);
+            
+            // Initial positioning data
+            const startRot = (i * theta * 180 / Math.PI);
+            g.dataset.tx = cx;
+            g.dataset.ty = cy;
+            g.dataset.rot = startRot;
+            
+            g.setAttribute('transform', `translate(${cx}, ${cy}) rotate(${startRot})`);
+            
+            // Pointer events for drag and drop
+            path.addEventListener('pointerdown', startDrag);
+            handleGroup.addEventListener('pointerdown', startRotate);
+
+            wedgesContainer.appendChild(g);
+        }
+    }
+
+    function startDrag(e) {
+        e.preventDefault();
+        currentActionElement = e.currentTarget;
+        activeWedge = currentActionElement.parentNode;
+        
+        // Bring to front
+        wedgesContainer.appendChild(activeWedge);
+        
+        // Remove transitions so dragging is instant
+        activeWedge.style.transition = 'none';
+        currentActionElement.style.cursor = 'grabbing';
+        
+        const pt = getSVGPoint(e.clientX, e.clientY);
+        startX = pt.x;
+        startY = pt.y;
+        initialTx = parseFloat(activeWedge.dataset.tx);
+        initialTy = parseFloat(activeWedge.dataset.ty);
+        
+        // Attach move/up to window so we don't lose the element if moving fast
+        window.addEventListener('pointermove', dragWedge);
+        window.addEventListener('pointerup', endDrag);
+    }
+
+    function dragWedge(e) {
+        if (!activeWedge) return;
+        const pt = getSVGPoint(e.clientX, e.clientY);
+        const dx = pt.x - startX;
+        const dy = pt.y - startY;
+        
+        const newTx = initialTx + dx;
+        const newTy = initialTy + dy;
+        activeWedge.dataset.tx = newTx;
+        activeWedge.dataset.ty = newTy;
+        
+        activeWedge.setAttribute('transform', `translate(${newTx}, ${newTy}) rotate(${activeWedge.dataset.rot})`);
+    }
+
+    function endDrag(e) {
+        if (!activeWedge) return;
+        if (currentActionElement) currentActionElement.style.cursor = 'grab';
+        
+        activeWedge = null;
+        currentActionElement = null;
+        window.removeEventListener('pointermove', dragWedge);
+        window.removeEventListener('pointerup', endDrag);
+    }
+
+    function startRotate(e) {
+        e.preventDefault();
+        e.stopPropagation(); // Stop drag from firing
+        
+        currentActionElement = e.currentTarget;
+        activeWedge = currentActionElement.parentNode;
+        isRotating = true;
+        
+        wedgesContainer.appendChild(activeWedge);
+        activeWedge.style.transition = 'none';
+        currentActionElement.style.cursor = 'grabbing';
+        
+        const pt = getSVGPoint(e.clientX, e.clientY);
+        const tx = parseFloat(activeWedge.dataset.tx);
+        const ty = parseFloat(activeWedge.dataset.ty);
+        
+        // Calculate the initial angle of the mouse to use as an offset
+        const mouseAngle = Math.atan2(pt.y - ty, pt.x - tx) * 180 / Math.PI;
+        const currentRot = parseFloat(activeWedge.dataset.rot);
+        rotationOffset = mouseAngle - currentRot;
+        
+        window.addEventListener('pointermove', rotateWedge);
+        window.addEventListener('pointerup', endRotate);
+    }
+
+    function rotateWedge(e) {
+        if (!activeWedge || !isRotating) return;
+        const pt = getSVGPoint(e.clientX, e.clientY);
+        const tx = parseFloat(activeWedge.dataset.tx);
+        const ty = parseFloat(activeWedge.dataset.ty);
+        
+        // Calculate new rotation based on mouse position
+        const mouseAngle = Math.atan2(pt.y - ty, pt.x - tx) * 180 / Math.PI;
+        const newRot = mouseAngle - rotationOffset;
+        
+        activeWedge.dataset.rot = newRot;
+        activeWedge.setAttribute('transform', `translate(${tx}, ${ty}) rotate(${newRot})`);
+    }
+
+    function endRotate(e) {
+        if (!activeWedge) return;
+        if (currentActionElement) currentActionElement.style.cursor = 'grab';
+        
+        isRotating = false;
+        activeWedge = null;
+        currentActionElement = null;
+        window.removeEventListener('pointermove', rotateWedge);
+        window.removeEventListener('pointerup', endRotate);
+    }
+
+    // Initialize Part 1
+    btnCut.addEventListener('click', createDraggableWedges);
+    createDraggableWedges();
+
+
+    // ==========================================
+    // --- PART 2: Sectors Animation Logic 
+    // ==========================================
     const sectorSlider = document.getElementById('sector-slider');
     const sectorCountDisplay = document.getElementById('sector-count');
     const sectorsCanvas = document.getElementById('sectors-canvas');
@@ -344,14 +478,12 @@
         }
 
         // --- Highlight Original Boundaries ---
-        // 1. Circumference (Green)
         sCtx.beginPath();
         sCtx.arc(cx1, cy1, R, 0, 2 * Math.PI);
         sCtx.strokeStyle = '#27ae60'; 
         sCtx.lineWidth = 4;
         sCtx.stroke();
 
-        // 2. Radius (Red)
         sCtx.beginPath();
         sCtx.moveTo(cx1, cy1);
         sCtx.lineTo(cx1 + R, cy1);
@@ -359,7 +491,6 @@
         sCtx.lineWidth = 4;
         sCtx.stroke();
 
-        // Labels for Original Circle
         sCtx.fillStyle = '#27ae60';
         sCtx.font = '14px bold sans-serif';
         sCtx.textAlign = 'center';
@@ -382,12 +513,10 @@
         for (let i = 0; i < n; i++) {
             sCtx.beginPath();
             if (i % 2 === 0) {
-                // Pointing down: tip at top (y=0)
                 const tipX = i * dx;
                 sCtx.moveTo(tipX, 0);
                 sCtx.arc(tipX, 0, R, Math.PI/2 - theta/2, Math.PI/2 + theta/2);
             } else {
-                // Pointing up: tip at bottom (y=h)
                 const tipX = i * dx;
                 sCtx.moveTo(tipX, h);
                 sCtx.arc(tipX, h, R, -Math.PI/2 - theta/2, -Math.PI/2 + theta/2);
@@ -399,7 +528,6 @@
         }
         
         // --- Highlight Rearranged Boundaries ---
-        // 1. Bases/Arcs (Green)
         sCtx.beginPath();
         for (let i = 0; i < n; i++) {
             if (i % 2 === 0) {
@@ -414,7 +542,6 @@
         sCtx.lineWidth = 4;
         sCtx.stroke();
 
-        // 2. Height/Radius (Red) - using left edge of the first sector
         sCtx.beginPath();
         sCtx.moveTo(0, 0);
         sCtx.lineTo(R * Math.cos(Math.PI/2 + theta/2), R * Math.sin(Math.PI/2 + theta/2));
@@ -426,49 +553,37 @@
 
         // Draw dimensions for the rectangle
         sCtx.font = '16px bold sans-serif';
-        
-        // Base label
         sCtx.fillStyle = '#27ae60';
         sCtx.textAlign = 'center';
         sCtx.fillText('Base ≈ πr', startX + totalWidth / 2, startY + R + 30);
         
-        // Height label
         sCtx.fillStyle = '#e74c3c';
         sCtx.textAlign = 'left';
         sCtx.fillText('Height ≈ r', startX + totalWidth + 10, startY + R / 2 + 5);
 
-        // Titles
         sCtx.fillStyle = '#2d3436';
         sCtx.textAlign = 'center';
-        
-        // Base label
-        sCtx.fillText('Base ≈ πr', startX + totalWidth / 2, startY + R + 30);
-        
-        // Height label
-        sCtx.textAlign = 'left';
-        sCtx.fillText('Height ≈ r', startX + totalWidth + 10, startY + R / 2 + 5);
-
-        // Titles
-        sCtx.textAlign = 'center';
-        sCtx.font = '18px sans-serif';
         sCtx.fillText('Original Circle', cx1, 35);
         sCtx.fillText('Rearranged Shape', width * 0.72, 35);
     }
 
     sectorSlider.addEventListener('input', drawSectors);
-    drawSectors(); // Initial draw
+    drawSectors();
 
-    // --- Practice Tool Logic ---
+
+    // ==========================================
+    // --- PART 3: Practice Tool Logic
+    // ==========================================
     let currentRadius = 0;
     let expectedArea = 0;
 
     function newQuestion() {
         currentRadius = Math.floor(Math.random() * 10) + 1;
-        // Using 3.14 for student-friendly calculation
-        expectedArea = (3.14 * Math.pow(currentRadius, 2)).toFixed(2);
+        // Using precise Math.PI instead of 3.14
+        expectedArea = (Math.PI * Math.pow(currentRadius, 2)).toFixed(2);
         
         document.getElementById('question-text').innerHTML = 
-            `A circle has a radius of <strong>${currentRadius}</strong>. <br> Calculate its area (use &pi; = 3.14).`;
+            `A circle has a radius of <strong>${currentRadius}</strong>. <br> Calculate its area. <em>(Round to 2 decimal places, using &pi; &approx; 3.14159...)</em>`;
         
         const feedback = document.getElementById('feedback');
         feedback.className = '';
@@ -487,17 +602,16 @@
         }
 
         // Allow for tiny rounding differences
-        if (Math.abs(userVal - expectedArea) < 0.1) {
+        if (Math.abs(userVal - expectedArea) <= 0.1) {
             feedback.textContent = "Correct! Great job.";
             feedback.className = 'correct';
         } else {
-            feedback.textContent = `Incorrect. Try again! Hint: 3.14 × ${currentRadius} × ${currentRadius}`;
+            feedback.textContent = `Incorrect. Try again! Hint: π × ${currentRadius} × ${currentRadius}`;
             feedback.className = 'incorrect';
         }
     }
 
-    // Initialize
-    updateVisualizer();
+    // Initialize Part 3
     newQuestion();
 </script>
 
